@@ -81,3 +81,12 @@ cd C:\PersonalAssistant\app
 ```
 
 The script prints a unique message to send in Discord, waits for it to appear in SQLite, and reports whether the full Discord -> OpenClaw -> PersonalAssistant path is working.
+
+If Discord replies but the probe does not appear in SQLite, run:
+
+```powershell
+cd C:\PersonalAssistant\app
+.\Repair-OpenClawDiscordConfig.ps1 -RestartGateway
+```
+
+Then rerun `Test-DiscordAssistantPath.ps1`. This repair script backs up `~\.openclaw\openclaw.json`, opens Discord group routing by setting `channels.discord.groupPolicy` to `open`, runs `openclaw doctor --fix`, and reports whether the active OpenClaw config references the Personal Assistant skill.
