@@ -24,12 +24,20 @@ Ensure-Command -Name "python" -WingetId "Python.Python.3.12"
 
 if ($RepoUrl -and -not (Test-Path (Join-Path $InstallDir "app\.git"))) {
     git clone $RepoUrl (Join-Path $InstallDir "app")
+} elseif ($RepoUrl -and (Test-Path (Join-Path $InstallDir "app\.git"))) {
+    Push-Location (Join-Path $InstallDir "app")
+    git pull --ff-only
+    Pop-Location
 } elseif (-not (Test-Path (Join-Path $InstallDir "app"))) {
     Copy-Item -Recurse -Force "$PSScriptRoot" (Join-Path $InstallDir "app")
 }
 
 if (-not (Test-Path (Join-Path $InstallDir "openclaw\.git"))) {
     git clone $OpenClawRepoUrl (Join-Path $InstallDir "openclaw")
+} else {
+    Push-Location (Join-Path $InstallDir "openclaw")
+    git pull --ff-only
+    Pop-Location
 }
 
 $AppDir = Join-Path $InstallDir "app"
@@ -87,5 +95,11 @@ if (-not $Health.ok) {
     throw "Health check failed"
 }
 
+$OllamaHealth = Invoke-RestMethod -Uri "$OllamaBaseUrl/api/tags" -Method GET
+if ($null -eq $OllamaHealth.models) {
+    throw "Ollama health check failed at $OllamaBaseUrl"
+}
+
 Write-Host "Personal Assistant service is healthy at http://127.0.0.1:8765"
+Write-Host "Ollama fallback is reachable at $OllamaBaseUrl"
 Write-Host "Configure OpenClaw Discord/OAuth using $InstallDir\app\config\openclaw.assistant.example.json and $InstallDir\app\openclaw\assistant.skill.json"

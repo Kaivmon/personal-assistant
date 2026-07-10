@@ -12,6 +12,10 @@ if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
 [Environment]::SetEnvironmentVariable("OLLAMA_HOST", "0.0.0.0:$Port", "Machine")
 $env:OLLAMA_HOST = "0.0.0.0:$Port"
 
+if (-not (Get-NetFirewallRule -DisplayName "Ollama LAN $Port" -ErrorAction SilentlyContinue)) {
+    New-NetFirewallRule -DisplayName "Ollama LAN $Port" -Direction Inbound -Action Allow -Protocol TCP -LocalPort $Port | Out-Null
+}
+
 $TaskName = "Ollama LAN Server"
 if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
     Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
@@ -41,4 +45,3 @@ $Ip = (Get-NetIPAddress -AddressFamily IPv4 |
 Write-Host "Ollama is healthy."
 Write-Host "Server connection URL: http://$Ip`:$Port"
 Write-Host "Installed model: $Model"
-
