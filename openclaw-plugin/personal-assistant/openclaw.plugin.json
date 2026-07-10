@@ -1,0 +1,27 @@
+{
+  "id": "personal-assistant",
+  "name": "Personal Assistant",
+  "description": "Logs, retrieves, analyzes, and reports personal notes through the local Personal Assistant service.",
+  "activation": {
+    "onStartup": true
+  },
+  "contracts": {
+    "tools": [
+      "personal_assistant"
+    ]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "baseUrl": {
+        "type": "string",
+        "description": "Base URL for the local Personal Assistant service."
+      },
+      "timeoutMs": {
+        "type": "number",
+        "description": "HTTP request timeout in milliseconds."
+      }
+    }
+  }
+}

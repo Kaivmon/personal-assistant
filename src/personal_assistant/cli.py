@@ -26,4 +26,3 @@ def main() -> None:
         print(assistant.handle_message(args.text)["reply"])
     elif args.command == "serve":
         run(settings)
-

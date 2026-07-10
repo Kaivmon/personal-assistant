@@ -70,15 +70,35 @@ Write-Host "channels.discord.groupPolicy: $($Updated.channels.discord.groupPolic
 Write-Host "channels.discord.allowFrom count: $(Count-Items $Updated.channels.discord.allowFrom)"
 Write-Host "channels.discord.groupAllowFrom count: $(Count-Items $Updated.channels.discord.groupAllowFrom)"
 
-Section "Personal Assistant Skill References In Active Config"
+Section "Personal Assistant Plugin References In Active Config"
 $ConfigText = Get-Content $OpenClawConfig -Raw
-$Needles = @("personal-assistant", "assistant.skill.json", "127.0.0.1:8765", "/openclaw/message")
+$Needles = @("personal-assistant", "personal_assistant", "127.0.0.1:8765")
 foreach ($Needle in $Needles) {
     if ($ConfigText.Contains($Needle)) {
         Write-Host "FOUND: $Needle"
     } else {
         Write-Host "MISSING: $Needle"
     }
+}
+
+Section "Install Personal Assistant OpenClaw Plugin"
+$PluginPath = Join-Path $InstallDir "app\openclaw-plugin\personal-assistant"
+if (-not (Test-Path (Join-Path $PluginPath "openclaw.plugin.json"))) {
+    throw "Personal Assistant OpenClaw plugin not found: $PluginPath"
+}
+try {
+    openclaw plugins uninstall personal-assistant --keep-files
+} catch {
+    Write-Host "No existing personal-assistant plugin install to remove, or uninstall was not needed: $($_.Exception.Message)"
+}
+openclaw plugins install --link $PluginPath
+openclaw plugins enable personal-assistant
+openclaw config set plugins.entries.personal-assistant.config.baseUrl "http://127.0.0.1:8765"
+openclaw config set plugins.entries.personal-assistant.config.timeoutMs 15000
+try {
+    openclaw plugins inspect personal-assistant --runtime --json
+} catch {
+    Write-Host "openclaw plugins inspect personal-assistant --runtime --json failed: $($_.Exception.Message)"
 }
 
 Section "Doctor Fix"
@@ -100,4 +120,4 @@ if ($RestartGateway) {
 
 Section "Next"
 Write-Host "Run .\Test-DiscordAssistantPath.ps1 again."
-Write-Host "If personal assistant skill references are MISSING in active config, OpenClaw still has not registered the local assistant skill."
+Write-Host "If the Discord probe still fails but plugin inspect shows personal_assistant, explicitly ask the bot to use the personal_assistant tool once."

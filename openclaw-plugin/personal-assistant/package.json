@@ -1,0 +1,17 @@
+{
+  "name": "@kaivmon/openclaw-personal-assistant",
+  "version": "0.1.0",
+  "description": "OpenClaw tool plugin for the Personal Assistant SQLite note service.",
+  "type": "module",
+  "peerDependencies": {
+    "openclaw": ">=2026.6.11"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.js"
+    ],
+    "compat": {
+      "pluginApi": ">=2026.6.11"
+    }
+  }
+}

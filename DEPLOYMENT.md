@@ -89,4 +89,4 @@ cd C:\PersonalAssistant\app
 .\Repair-OpenClawDiscordConfig.ps1 -RestartGateway
 ```
 
-Then rerun `Test-DiscordAssistantPath.ps1`. This repair script backs up `~\.openclaw\openclaw.json`, opens Discord group routing by setting `channels.discord.groupPolicy` to `open`, runs `openclaw doctor --fix`, and reports whether the active OpenClaw config references the Personal Assistant skill.
+Then rerun `Test-DiscordAssistantPath.ps1`. This repair script backs up `~\.openclaw\openclaw.json`, opens Discord group routing by setting `channels.discord.groupPolicy` to `open`, installs the local Personal Assistant OpenClaw plugin, runs `openclaw doctor --fix`, and inspects the plugin runtime.

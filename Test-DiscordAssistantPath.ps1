@@ -112,7 +112,7 @@ function Search-OpenClawAssistantReferences {
         return
     }
 
-    $Patterns = @("personal-assistant", "assistant.skill.json", "127.0.0.1:8765", "/openclaw/message")
+    $Patterns = @("personal-assistant", "personal_assistant", "127.0.0.1:8765", "/openclaw/message")
     foreach ($Pattern in $Patterns) {
         $Matches = Get-ChildItem $Root -Recurse -File -ErrorAction SilentlyContinue |
             Where-Object { $_.Length -lt 2MB } |
@@ -164,6 +164,13 @@ Show-OpenClawConfigSummary
 
 Section "OpenClaw Assistant Skill References"
 Search-OpenClawAssistantReferences
+
+Section "OpenClaw Personal Assistant Plugin"
+try {
+    openclaw plugins inspect personal-assistant --runtime --json
+} catch {
+    Write-Host "openclaw plugins inspect personal-assistant --runtime --json failed: $($_.Exception.Message)"
+}
 
 Section "OpenClaw Doctor Signals"
 try {

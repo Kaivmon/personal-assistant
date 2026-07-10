@@ -244,4 +244,4 @@ if ($SkipOllamaHealthCheck) {
 } else {
     Write-Host "Ollama fallback is reachable at $OllamaBaseUrl"
 }
-Write-Host "Configure OpenClaw Discord/OAuth using $InstallDir\app\config\openclaw.assistant.example.json and $InstallDir\app\openclaw\assistant.skill.json"
+Write-Host "Configure OpenClaw Discord/OAuth, then run $InstallDir\app\Repair-OpenClawDiscordConfig.ps1 -RestartGateway to install the Personal Assistant OpenClaw plugin."

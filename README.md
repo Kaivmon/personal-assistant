@@ -37,5 +37,10 @@ Log a note:
 
 ## OpenClaw
 
-Register `openclaw/assistant.skill.json` with OpenClaw and configure Discord plus ChatGPT OAuth using `config/openclaw.assistant.example.json`.
+Install the native local OpenClaw plugin from `openclaw-plugin/personal-assistant`. The repair helper does this automatically:
 
+```powershell
+.\Repair-OpenClawDiscordConfig.ps1 -RestartGateway
+```
+
+The plugin registers a `personal_assistant` tool that calls the local service at `http://127.0.0.1:8765`.
