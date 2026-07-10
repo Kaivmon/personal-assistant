@@ -10,10 +10,10 @@ There is exactly one deployment script per machine:
 Run PowerShell as Administrator:
 
 ```powershell
-.\Deploy-Server.ps1 -RepoUrl "https://github.com/YOUR-USER/personal-assistant.git" -OllamaBaseUrl "http://BEELINK-LAN-IP:11434"
+.\Deploy-Server.ps1
 ```
 
-The script installs Git and Python if needed, clones the app, clones OpenClaw, creates SQLite, installs the assistant as a Windows Service, starts it immediately, and verifies `/health`.
+The script installs Git and Python if needed, clones `https://github.com/Kaivmon/personal-assistant.git`, clones OpenClaw, configures Ollama at `http://172.19.96.1:11434`, creates SQLite, installs the assistant as a Windows Service, starts it immediately, and verifies `/health`.
 
 After deployment, edit `C:\PersonalAssistant\.env` with Discord and OpenClaw OAuth settings, then restart:
 
@@ -31,3 +31,8 @@ Run PowerShell as Administrator on the Beelink:
 
 The script installs Ollama, configures LAN binding, registers automatic startup, starts Ollama, pulls the model, performs a health check, and prints the server connection URL.
 
+The Windows Server deployment currently expects the Beelink connection URL to be:
+
+```text
+http://172.19.96.1:11434
+```

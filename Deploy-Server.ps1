@@ -1,9 +1,9 @@
 param(
     [string]$InstallDir = "C:\PersonalAssistant",
-    [string]$RepoUrl = "",
+    [string]$RepoUrl = "https://github.com/Kaivmon/personal-assistant.git",
     [string]$OpenClawRepoUrl = "https://github.com/openclaw/openclaw.git",
     [string]$ServiceName = "PersonalAssistant",
-    [string]$OllamaBaseUrl = "http://beelink:11434"
+    [string]$OllamaBaseUrl = "http://172.19.96.1:11434"
 )
 
 $ErrorActionPreference = "Stop"
@@ -89,4 +89,3 @@ if (-not $Health.ok) {
 
 Write-Host "Personal Assistant service is healthy at http://127.0.0.1:8765"
 Write-Host "Configure OpenClaw Discord/OAuth using $InstallDir\app\config\openclaw.assistant.example.json and $InstallDir\app\openclaw\assistant.skill.json"
-
