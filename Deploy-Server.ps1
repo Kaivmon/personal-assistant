@@ -8,12 +8,39 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Assert-Administrator {
+    $Identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $Principal = [Security.Principal.WindowsPrincipal]::new($Identity)
+    if (-not $Principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        throw "Deploy-Server.ps1 must be run from an elevated PowerShell session. Right-click PowerShell and choose 'Run as administrator', then run this script again."
+    }
+}
+
 function Ensure-Command {
     param([string]$Name, [string]$WingetId)
     if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
         winget install --id $WingetId --exact --silent --accept-package-agreements --accept-source-agreements
     }
 }
+
+function Resolve-Python {
+    $Candidates = @(
+        @{ Command = "py"; Args = @("-3.12") },
+        @{ Command = "py"; Args = @("-3") },
+        @{ Command = "python"; Args = @() }
+    )
+    foreach ($Candidate in $Candidates) {
+        if (Get-Command $Candidate.Command -ErrorAction SilentlyContinue) {
+            & $Candidate.Command @($Candidate.Args) --version | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                return $Candidate
+            }
+        }
+    }
+    throw "Python 3 was not found after installation. Open a new elevated PowerShell session and rerun this script."
+}
+
+Assert-Administrator
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $InstallDir "data") | Out-Null
@@ -42,9 +69,17 @@ if (-not (Test-Path (Join-Path $InstallDir "openclaw\.git"))) {
 
 $AppDir = Join-Path $InstallDir "app"
 $Venv = Join-Path $InstallDir ".venv"
-python -m venv $Venv
-& (Join-Path $Venv "Scripts\python.exe") -m pip install --upgrade pip
-& (Join-Path $Venv "Scripts\python.exe") -m pip install -e $AppDir
+$Python = Resolve-Python
+& $Python.Command @($Python.Args) -m venv $Venv
+if ($LASTEXITCODE -ne 0) {
+    throw "Python venv creation failed at $Venv"
+}
+$VenvPython = Join-Path $Venv "Scripts\python.exe"
+if (-not (Test-Path $VenvPython)) {
+    throw "Python venv was not created at $Venv. Open a new elevated PowerShell session and rerun this script."
+}
+& $VenvPython -m pip install --upgrade pip
+& $VenvPython -m pip install -e $AppDir
 
 $EnvPath = Join-Path $InstallDir ".env"
 if (-not (Test-Path $EnvPath)) {
