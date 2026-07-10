@@ -35,7 +35,10 @@ function Redact-Text {
     $Output = $Text
     $Output = $Output -replace '(?i)(token|api[_-]?key|secret|password|authorization|bot[_-]?token)(\s*[:=]\s*)("[^"]+"|''[^'']+''|[^\s,}\]]+)', '$1$2<redacted>'
     $Output = $Output -replace '(?i)(Bearer\s+)[A-Za-z0-9._~+/=-]{12,}', '$1<redacted>'
-    $Output = $Output -replace '\b[A-Za-z0-9_\-]{24}\.[A-Za-z0-9_\-]{6}\.[A-Za-z0-9_\-]{20,}\b', '<discord-token-redacted>'
+    $Output = $Output -replace '\bmfa\.[A-Za-z0-9_\-]{60,}\b', '<discord-token-redacted>'
+    $Output = $Output -replace '\b[A-Za-z0-9_\-]{20,40}\.[A-Za-z0-9_\-]{5,12}\.[A-Za-z0-9_\-]{20,80}\b', '<discord-token-redacted>'
+    $Output = $Output -replace '(?i)("discord[^"]*token"\s*:\s*)"[^"]+"', '$1"<redacted>"'
+    $Output = $Output -replace '(?i)(DISCORD_[A-Z0-9_]*TOKEN\s*=\s*)[^\r\n]+', '$1<redacted>'
     return $Output
 }
 
@@ -158,6 +161,26 @@ for needle in needles:
 print(json.dumps(out, indent=2))
 "@
     & $PythonPath -c $Code $DbPath $NeedleJson 2>&1 | Out-String -Width 300
+}
+
+function Sanitize-DiagnosticFiles {
+    param([string]$Path)
+    if (-not (Test-Path $Path)) {
+        return
+    }
+
+    Get-ChildItem $Path -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+        try {
+            $Content = Get-Content $_.FullName -Raw -ErrorAction Stop
+            $Redacted = Redact-Text $Content
+            if ($Redacted -ne $Content) {
+                Set-Content -Path $_.FullName -Value $Redacted -Encoding UTF8
+            }
+        } catch {
+            $WarningPath = Join-Path $Path "sanitize-warnings.txt"
+            "Could not sanitize $($_.FullName): $($_.Exception.Message)" | Add-Content -Path $WarningPath -Encoding UTF8
+        }
+    }
 }
 
 Start-Transcript -Path $TranscriptPath -Force | Out-Null
@@ -455,6 +478,7 @@ Primary files to inspect first:
 "@
 
 Stop-Transcript | Out-Null
+Sanitize-DiagnosticFiles -Path $RunDir
 
 if ($PushToGitHub) {
     Write-Host ""
