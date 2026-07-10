@@ -72,3 +72,12 @@ cd C:\PersonalAssistant\app
 ```
 
 The script checks the assistant service, local health endpoints, key environment variables with secrets masked, Node/npm/OpenClaw command availability, likely OpenClaw config paths, OpenClaw status commands, and recent assistant service logs.
+
+To prove whether Discord messages are actually reaching the Personal Assistant SQLite-backed service, run:
+
+```powershell
+cd C:\PersonalAssistant\app
+.\Test-DiscordAssistantPath.ps1
+```
+
+The script prints a unique message to send in Discord, waits for it to appear in SQLite, and reports whether the full Discord -> OpenClaw -> PersonalAssistant path is working.
