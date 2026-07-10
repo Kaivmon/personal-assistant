@@ -61,3 +61,14 @@ If you need to finish the Windows Server deployment before fixing Ollama connect
 ```powershell
 .\Deploy-Server.ps1 -SkipOllamaHealthCheck
 ```
+
+## Troubleshooting
+
+On the Windows Server, run:
+
+```powershell
+cd C:\PersonalAssistant\app
+.\Troubleshoot-Server.ps1
+```
+
+The script checks the assistant service, local health endpoints, key environment variables with secrets masked, Node/npm/OpenClaw command availability, likely OpenClaw config paths, OpenClaw status commands, and recent assistant service logs.
