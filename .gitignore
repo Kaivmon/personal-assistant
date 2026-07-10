@@ -9,3 +9,4 @@ build/
 *.egg-info/
 tests/_runtime/
 .test-tmp/
+pytest-cache-files-*/
