@@ -1,0 +1,27 @@
+{
+  "profile": "personal-assistant",
+  "discord": {
+    "enabled": true,
+    "token_env": "OPENCLAW_DISCORD_BOT_TOKEN",
+    "allowed_user_ids_env": "OPENCLAW_ALLOWED_DISCORD_USER_IDS"
+  },
+  "providers": {
+    "primary": {
+      "type": "chatgpt_plus_oauth",
+      "oauth_profile_env": "OPENCLAW_CHATGPT_OAUTH_PROFILE",
+      "paid_api_fallback": false
+    },
+    "fallback": {
+      "type": "ollama",
+      "base_url_env": "OLLAMA_BASE_URL",
+      "model_env": "OLLAMA_MODEL"
+    },
+    "routing_policy": {
+      "switch_to_fallback_when_primary_limited": true,
+      "never_consume_api_credits": true
+    }
+  },
+  "skills": [
+    "../openclaw/assistant.skill.json"
+  ]
+}

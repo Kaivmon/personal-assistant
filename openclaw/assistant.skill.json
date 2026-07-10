@@ -1,0 +1,36 @@
+{
+  "name": "personal-assistant-notes",
+  "description": "Logs natural-language notes, retrieves SQLite-backed records, runs deterministic analytics, and generates temporary Obsidian-compatible Markdown reports.",
+  "transport": {
+    "type": "http",
+    "base_url_env": "PERSONAL_ASSISTANT_URL",
+    "default_base_url": "http://127.0.0.1:8765"
+  },
+  "tools": [
+    {
+      "name": "message",
+      "method": "POST",
+      "path": "/openclaw/message",
+      "input_schema": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "provider_status",
+      "method": "POST",
+      "path": "/openclaw/provider-status",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "limit_per_window": { "type": "integer" },
+          "used_in_window": { "type": "integer" }
+        }
+      }
+    }
+  ]
+}
+
