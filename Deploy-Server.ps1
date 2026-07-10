@@ -67,6 +67,48 @@ function Resolve-Nssm {
     throw "NSSM was installed but nssm.exe was not found. Open a new elevated PowerShell session and rerun this script."
 }
 
+function Stop-ExistingService {
+    param([string]$Name)
+    $Service = Get-Service $Name -ErrorAction SilentlyContinue
+    if ($Service -and $Service.Status -ne "Stopped") {
+        Stop-Service $Name -Force -ErrorAction SilentlyContinue
+        $Service.WaitForStatus("Stopped", "00:00:20")
+    }
+}
+
+function Reset-VenvIfBroken {
+    param(
+        [string]$VenvPath,
+        [object]$PythonCommand
+    )
+
+    $VenvPythonPath = Join-Path $VenvPath "Scripts\python.exe"
+    if (Test-Path $VenvPythonPath) {
+        try {
+            & $VenvPythonPath --version | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                return
+            }
+        } catch {
+            Write-Host "Existing virtualenv is not usable and will be recreated: $($_.Exception.Message)"
+        }
+    }
+
+    if (Test-Path $VenvPath) {
+        $ResolvedVenv = (Resolve-Path -LiteralPath $VenvPath).Path
+        $ResolvedInstall = (Resolve-Path -LiteralPath $InstallDir).Path
+        if (-not $ResolvedVenv.StartsWith($ResolvedInstall)) {
+            throw "Refusing to remove venv outside install directory: $ResolvedVenv"
+        }
+        Remove-Item -LiteralPath $ResolvedVenv -Recurse -Force
+    }
+
+    & $PythonCommand.Command @($PythonCommand.Args) -m venv $VenvPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "Python venv creation failed at $VenvPath"
+    }
+}
+
 Assert-Administrator
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
@@ -99,10 +141,8 @@ if (-not (Test-Path (Join-Path $InstallDir "openclaw\.git"))) {
 $AppDir = Join-Path $InstallDir "app"
 $Venv = Join-Path $InstallDir ".venv"
 $Python = Resolve-Python
-& $Python.Command @($Python.Args) -m venv $Venv
-if ($LASTEXITCODE -ne 0) {
-    throw "Python venv creation failed at $Venv"
-}
+Stop-ExistingService -Name $ServiceName
+Reset-VenvIfBroken -VenvPath $Venv -PythonCommand $Python
 $VenvPython = Join-Path $Venv "Scripts\python.exe"
 if (-not (Test-Path $VenvPython)) {
     throw "Python venv was not created at $Venv. Open a new elevated PowerShell session and rerun this script."
