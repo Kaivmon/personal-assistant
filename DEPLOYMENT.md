@@ -43,3 +43,21 @@ The Windows Server deployment currently expects the Beelink connection URL to be
 ```text
 http://172.19.96.1:11434
 ```
+
+If that address is not reachable from the Windows Server, find the Beelink address on the adapter with a default gateway:
+
+```powershell
+Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway } | Select-Object -ExpandProperty IPv4Address
+```
+
+Then rerun server deployment with:
+
+```powershell
+.\Deploy-Server.ps1 -OllamaBaseUrl "http://BEELINK-LAN-IP:11434"
+```
+
+If you need to finish the Windows Server deployment before fixing Ollama connectivity:
+
+```powershell
+.\Deploy-Server.ps1 -SkipOllamaHealthCheck
+```

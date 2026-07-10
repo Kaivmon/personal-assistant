@@ -3,7 +3,8 @@ param(
     [string]$RepoUrl = "https://github.com/Kaivmon/personal-assistant.git",
     [string]$OpenClawRepoUrl = "https://github.com/openclaw/openclaw.git",
     [string]$ServiceName = "PersonalAssistant",
-    [string]$OllamaBaseUrl = "http://172.19.96.1:11434"
+    [string]$OllamaBaseUrl = "http://172.19.96.1:11434",
+    [switch]$SkipOllamaHealthCheck
 )
 
 $ErrorActionPreference = "Stop"
@@ -167,11 +168,40 @@ if (-not $Health.ok) {
     throw "Health check failed"
 }
 
-$OllamaHealth = Invoke-RestMethod -Uri "$OllamaBaseUrl/api/tags" -Method GET
-if ($null -eq $OllamaHealth.models) {
-    throw "Ollama health check failed at $OllamaBaseUrl"
+if (-not $SkipOllamaHealthCheck) {
+    try {
+        $OllamaHealth = Invoke-RestMethod -Uri "$OllamaBaseUrl/api/tags" -Method GET -TimeoutSec 10
+        if ($null -eq $OllamaHealth.models) {
+            throw "Ollama responded but did not return a models list."
+        }
+    } catch {
+        throw @"
+Ollama health check failed at $OllamaBaseUrl.
+
+The Personal Assistant service is installed, but the Windows Server cannot reach Beelink Ollama.
+
+On the Beelink, run:
+  Get-NetIPConfiguration | Where-Object { `$_.IPv4DefaultGateway } | Select-Object -ExpandProperty IPv4Address
+  Invoke-RestMethod http://127.0.0.1:11434/api/tags
+
+On the Windows Server, test:
+  Invoke-RestMethod $OllamaBaseUrl/api/tags
+
+If the Beelink IP is different, rerun:
+  .\Deploy-Server.ps1 -OllamaBaseUrl "http://BEELINK-LAN-IP:11434"
+
+To finish server deployment without verifying Ollama yet, rerun:
+  .\Deploy-Server.ps1 -SkipOllamaHealthCheck
+
+Original error: $($_.Exception.Message)
+"@
+    }
 }
 
 Write-Host "Personal Assistant service is healthy at http://127.0.0.1:8765"
-Write-Host "Ollama fallback is reachable at $OllamaBaseUrl"
+if ($SkipOllamaHealthCheck) {
+    Write-Host "Skipped Ollama fallback health check."
+} else {
+    Write-Host "Ollama fallback is reachable at $OllamaBaseUrl"
+}
 Write-Host "Configure OpenClaw Discord/OAuth using $InstallDir\app\config\openclaw.assistant.example.json and $InstallDir\app\openclaw\assistant.skill.json"
