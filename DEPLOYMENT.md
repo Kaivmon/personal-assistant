@@ -13,7 +13,14 @@ Run PowerShell as Administrator:
 .\Deploy-Server.ps1
 ```
 
-The script installs Git and Python if needed, clones or fast-forwards `https://github.com/Kaivmon/personal-assistant.git`, clones or fast-forwards OpenClaw, configures Ollama at `http://172.19.96.1:11434`, creates SQLite, installs the assistant as a Windows Service, starts it immediately, verifies `/health`, and verifies the Beelink Ollama connection.
+The script installs Git, Python, and NSSM if needed, clones or fast-forwards `https://github.com/Kaivmon/personal-assistant.git`, clones or fast-forwards OpenClaw, configures Ollama at `http://172.19.96.1:11434`, creates SQLite, installs the assistant as a Windows Service, starts it immediately, verifies `/health`, and verifies the Beelink Ollama connection.
+
+Service logs are written to:
+
+```text
+C:\PersonalAssistant\logs\service.log
+C:\PersonalAssistant\logs\service.err.log
+```
 
 After deployment, edit `C:\PersonalAssistant\.env` with Discord and OpenClaw OAuth settings, then restart:
 

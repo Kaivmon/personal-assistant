@@ -40,14 +40,42 @@ function Resolve-Python {
     throw "Python 3 was not found after installation. Open a new elevated PowerShell session and rerun this script."
 }
 
+function Resolve-Nssm {
+    $Command = Get-Command nssm -ErrorAction SilentlyContinue
+    if ($Command) {
+        return $Command.Source
+    }
+
+    $SearchRoots = @($env:ProgramFiles, ${env:ProgramFiles(x86)}) | Where-Object { $_ -and (Test-Path $_) }
+    if ($env:LOCALAPPDATA) {
+        $WingetPackages = Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Packages"
+        if (Test-Path $WingetPackages) {
+            $SearchRoots += $WingetPackages
+        }
+    }
+
+    foreach ($Root in $SearchRoots) {
+        $Match = Get-ChildItem -Path $Root -Recurse -Filter "nssm.exe" -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match "\\win64\\|\\x64\\|nssm.exe$" } |
+            Select-Object -First 1
+        if ($Match) {
+            return $Match.FullName
+        }
+    }
+
+    throw "NSSM was installed but nssm.exe was not found. Open a new elevated PowerShell session and rerun this script."
+}
+
 Assert-Administrator
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $InstallDir "data") | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $InstallDir "data\reports") | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $InstallDir "logs") | Out-Null
 
 Ensure-Command -Name "git" -WingetId "Git.Git"
 Ensure-Command -Name "python" -WingetId "Python.Python.3.12"
+Ensure-Command -Name "nssm" -WingetId "NSSM.NSSM"
 
 if ($RepoUrl -and -not (Test-Path (Join-Path $InstallDir "app\.git"))) {
     git clone $RepoUrl (Join-Path $InstallDir "app")
@@ -120,8 +148,17 @@ if (Get-Service $ServiceName -ErrorAction SilentlyContinue) {
     Start-Sleep -Seconds 2
 }
 
-$BinaryPath = "powershell.exe -ExecutionPolicy Bypass -File `"$ServiceScript`""
-New-Service -Name $ServiceName -BinaryPathName $BinaryPath -DisplayName "Personal Assistant" -StartupType Automatic
+$Nssm = Resolve-Nssm
+$ServiceLog = Join-Path $InstallDir "logs\service.log"
+$ServiceErr = Join-Path $InstallDir "logs\service.err.log"
+& $Nssm install $ServiceName "powershell.exe"
+& $Nssm set $ServiceName AppParameters "-NoProfile -ExecutionPolicy Bypass -File `"$ServiceScript`""
+& $Nssm set $ServiceName AppDirectory $InstallDir
+& $Nssm set $ServiceName DisplayName "Personal Assistant"
+& $Nssm set $ServiceName Start SERVICE_AUTO_START
+& $Nssm set $ServiceName AppStdout $ServiceLog
+& $Nssm set $ServiceName AppStderr $ServiceErr
+& $Nssm set $ServiceName AppRotateFiles 1
 Start-Service $ServiceName
 Start-Sleep -Seconds 3
 
